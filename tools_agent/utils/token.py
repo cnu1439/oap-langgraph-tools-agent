@@ -114,6 +114,10 @@ async def fetch_tokens(config: RunnableConfig) -> dict[str, Any]:
     if not mcp_config or not mcp_config.get("url"):
         return None
 
+    logging.info(f"Fetching MCP access token for user {config.get('metadata', {}).get('owner')}")
+    logging.info(f"Supabase token: {supabase_token}")
+    logging.info(f"MCP URL: {mcp_config.get('url')}")
+
     mcp_tokens = await get_mcp_access_token(supabase_token, mcp_config.get("url"))
 
     await set_tokens(config, mcp_tokens)

@@ -1,3 +1,4 @@
+import logging
 from langchain_core.runnables import RunnableConfig
 from typing import Optional, List
 from pydantic import BaseModel, Field
@@ -167,6 +168,13 @@ async def graph(config: RunnableConfig):
         temperature=cfg.temperature,
         max_tokens=cfg.max_tokens,
     )
+
+    # print all the tools
+    logging.info(f"Tools: {tools}")
+
+    # print all the tools names
+    logging.info(f"Tool names: {[tool.name for tool in tools]}")
+
 
     return create_react_agent(
         prompt=cfg.system_prompt + UNEDITABLE_SYSTEM_PROMPT,
