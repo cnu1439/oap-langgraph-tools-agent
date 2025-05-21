@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any, cast
 from langchain_core.tools import StructuredTool, ToolException, tool
 import aiohttp
 import re
@@ -122,12 +122,19 @@ def get_economics_search_tool():
     Returns:
         A structured tool that can be used to search for economics-related information
     """
-    search_tool = TavilySearch(
-        name="Macro Economics Search",
-        description="""A search engine optimized for comprehensive, accurate, and trusted results. Useful for when 
-        you need to answer questions related macro economics utterances (inflation, gdp, unemployment, interest rates).
-        It not only retrieves URLs and snippets, but offers advanced search depths, domain management, time range filters, 
-        and image search, this tool delivers real-time, accurate, and citation-backed results.Input should be a search query.""",
-        topic="general",
-    )
-    return search_tool
+
+    name = "macro_economics_search"
+    description = "A search engine optimized for comprehensive, accurate, and trusted results. \
+Useful for when you need to answer questions related macro economics utterances \
+(inflation, gdp, unemployment, interest rates). It not only retrieves URLs and snippets, \
+but offers advanced search depths, domain management, time range filters, and image search, \
+this tool delivers real-time, accurate, and citation-backed results.Input should be a search query."
+
+    @tool(name_or_callable=name, description=description)
+    async def search(query: Annotated[str, "The search query to find relevant information"]):
+        """Search for information related to macro economics."""
+
+        wrapped = TavilySearch(max_results=3)
+        return cast(dict[str, Any], await wrapped.ainvoke({"query": query}))
+
+    return search
