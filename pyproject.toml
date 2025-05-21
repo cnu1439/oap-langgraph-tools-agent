@@ -16,6 +16,7 @@ dependencies = [
     "langchain-mcp-adapters==0.1.0",
     "supabase>=2.15.1",
     "aiohttp>=3.8.0",
+    "langchain-tavily>=0.1.6",
 ]
 
 [tool.setuptools]
