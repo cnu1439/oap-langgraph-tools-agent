@@ -15,7 +15,7 @@ UNEDITABLE_SYSTEM_PROMPT = "\nIf the tool throws an error requiring authenticati
 DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant that has access to a variety of tools."
 
 
-LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
+MCP_API_KEY = os.getenv("MCP_API_KEY")
 
 
 class RagConfig(BaseModel):
@@ -148,7 +148,7 @@ async def graph(config: RunnableConfig):
                 "mcp_server": {
                     "transport": "streamable_http",
                     "url": cfg.mcp_config.url.rstrip("/") + "/mcp",
-                    "headers": {"X-Api-Key": f"{LANGSMITH_API_KEY}"},
+                    "headers": {"X-Api-Key": f"{MCP_API_KEY}"},
                 }
             }
         )
