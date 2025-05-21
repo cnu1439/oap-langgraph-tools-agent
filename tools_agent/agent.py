@@ -11,9 +11,7 @@ from tools_agent.utils.tools import wrap_mcp_authenticate_tool
 
 UNEDITABLE_SYSTEM_PROMPT = "\nIf the tool throws an error requiring authentication, provide the user with a Markdown link to the authentication page and prompt them to authenticate."
 
-DEFAULT_SYSTEM_PROMPT = (
-    "You are a helpful assistant that has access to a variety of tools."
-)
+DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant that has access to a variety of tools."
 
 
 class RagConfig(BaseModel):
@@ -133,32 +131,20 @@ async def graph(config: RunnableConfig):
     supabase_token = config.get("configurable", {}).get("x-supabase-access-token")
     if cfg.rag and cfg.rag.rag_url and cfg.rag.collections and supabase_token:
         for collection in cfg.rag.collections:
-            rag_tool = await create_rag_tool(
-                cfg.rag.rag_url, collection, supabase_token
-            )
+            rag_tool = await create_rag_tool(cfg.rag.rag_url, collection, supabase_token)
             tools.append(rag_tool)
-
 
     logging.info("MCP config: %s", cfg.mcp_config)
     logging.info("MCP tools: %s", cfg.mcp_config.tools)
-
     logging.info("MCP URL: %s", cfg.mcp_config.url)
 
-
-    if (
-        cfg.mcp_config
-        and cfg.mcp_config.url
-        and cfg.mcp_config.tools
-        and (mcp_tokens := await fetch_tokens(config))
-    ):
+    if cfg.mcp_config and cfg.mcp_config.url and cfg.mcp_config.tools:
         mcp_client = MultiServerMCPClient(
             connections={
                 "mcp_server": {
                     "transport": "streamable_http",
                     "url": cfg.mcp_config.url.rstrip("/") + "/mcp",
-                    "headers": {
-                        "Authorization": f"Bearer {mcp_tokens['access_token']}"
-                    },
+                    # "headers": {"Authorization": f"Bearer {mcp_tokens['access_token']}"},
                 }
             }
         )
@@ -181,7 +167,6 @@ async def graph(config: RunnableConfig):
 
     # print all the tools names
     logging.info(f"Tool names: {[tool.name for tool in tools]}")
-
 
     return create_react_agent(
         prompt=cfg.system_prompt + UNEDITABLE_SYSTEM_PROMPT,
