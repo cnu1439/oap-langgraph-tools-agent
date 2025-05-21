@@ -1,4 +1,5 @@
 import logging
+import os
 from langchain_core.runnables import RunnableConfig
 from typing import Optional, List
 from pydantic import BaseModel, Field
@@ -12,6 +13,9 @@ from tools_agent.utils.tools import wrap_mcp_authenticate_tool, get_economics_se
 UNEDITABLE_SYSTEM_PROMPT = "\nIf the tool throws an error requiring authentication, provide the user with a Markdown link to the authentication page and prompt them to authenticate."
 
 DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant that has access to a variety of tools."
+
+
+LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
 
 
 class RagConfig(BaseModel):
@@ -36,11 +40,11 @@ class MCPConfig(BaseModel):
 
 class GraphConfigPydantic(BaseModel):
     model_name: Optional[str] = Field(
-        default="anthropic:claude-3-7-sonnet-latest",
+        default="openai:gpt-4.1",
         metadata={
             "x_oap_ui_config": {
                 "type": "select",
-                "default": "anthropic:claude-3-7-sonnet-latest",
+                "default": "openai:gpt-4.1",
                 "description": "The model to use in all generations",
                 "options": [
                     {
@@ -63,7 +67,7 @@ class GraphConfigPydantic(BaseModel):
         metadata={
             "x_oap_ui_config": {
                 "type": "slider",
-                "default": 0.7,
+                "default": 0.0,
                 "min": 0,
                 "max": 2,
                 "step": 0.1,
@@ -144,7 +148,7 @@ async def graph(config: RunnableConfig):
                 "mcp_server": {
                     "transport": "streamable_http",
                     "url": cfg.mcp_config.url.rstrip("/") + "/mcp",
-                    # "headers": {"Authorization": f"Bearer {mcp_tokens['access_token']}"},
+                    "headers": {"X-Api-Key": f"{LANGSMITH_API_KEY}"},
                 }
             }
         )
