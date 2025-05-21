@@ -7,7 +7,7 @@ from tools_agent.utils.tools import create_rag_tool
 from langchain.chat_models import init_chat_model
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from tools_agent.utils.token import fetch_tokens
-from tools_agent.utils.tools import wrap_mcp_authenticate_tool
+from tools_agent.utils.tools import wrap_mcp_authenticate_tool, get_economics_search_tool
 
 UNEDITABLE_SYSTEM_PROMPT = "\nIf the tool throws an error requiring authentication, provide the user with a Markdown link to the authentication page and prompt them to authenticate."
 
@@ -126,7 +126,7 @@ class GraphConfigPydantic(BaseModel):
 
 async def graph(config: RunnableConfig):
     cfg = GraphConfigPydantic(**config.get("configurable", {}))
-    tools = []
+    tools = [get_economics_search_tool()]
 
     supabase_token = config.get("configurable", {}).get("x-supabase-access-token")
     if cfg.rag and cfg.rag.rag_url and cfg.rag.collections and supabase_token:

@@ -2,6 +2,7 @@ from typing import Annotated
 from langchain_core.tools import StructuredTool, ToolException, tool
 import aiohttp
 import re
+from langchain_tavily import TavilySearch
 
 
 def wrap_mcp_authenticate_tool(tool: StructuredTool) -> StructuredTool:
@@ -21,15 +22,8 @@ def wrap_mcp_authenticate_tool(tool: StructuredTool) -> StructuredTool:
                 if hasattr(sub_exception, "error"):
                     e = sub_exception
 
-            if (
-                hasattr(e, "error")
-                and hasattr(e.error, "code")
-                and e.error.code == -32003
-                and hasattr(e.error, "data")
-            ):
-                error_message = (
-                    ((e.error.data or {}).get("message") or {}).get("text")
-                ) or "Required interaction"
+            if hasattr(e, "error") and hasattr(e.error, "code") and e.error.code == -32003 and hasattr(e.error, "data"):
+                error_message = (((e.error.data or {}).get("message") or {}).get("text")) or "Required interaction"
 
                 if url := (e.error.data or {}).get("url"):
                     error_message += f": {url}"
@@ -79,7 +73,9 @@ async def create_rag_tool(rag_url: str, collection_id: str, access_token: str):
         raw_description = collection_data.get("metadata", {}).get("description")
 
         if not raw_description:
-            collection_description = "Search your collection of documents for results semantically similar to the input query"
+            collection_description = (
+                "Search your collection of documents for results semantically similar to the input query"
+            )
         else:
             collection_description = f"Search your collection of documents for results semantically similar to the input query. Collection description: {raw_description}"
 
@@ -107,9 +103,7 @@ async def create_rag_tool(rag_url: str, collection_id: str, access_token: str):
                 for doc in documents:
                     doc_id = doc.get("id", "unknown")
                     content = doc.get("page_content", "")
-                    formatted_docs += (
-                        f'  <document id="{doc_id}">\n    {content}\n  </document>\n'
-                    )
+                    formatted_docs += f'  <document id="{doc_id}">\n    {content}\n  </document>\n'
 
                 formatted_docs += "</all-documents>"
                 return formatted_docs
@@ -120,3 +114,20 @@ async def create_rag_tool(rag_url: str, collection_id: str, access_token: str):
 
     except Exception as e:
         raise Exception(f"Failed to create RAG tool: {str(e)}")
+
+
+def get_economics_search_tool():
+    """Create a search tool for economics-related queries.
+
+    Returns:
+        A structured tool that can be used to search for economics-related information
+    """
+    search_tool = TavilySearch(
+        name="Macro Economics Search",
+        description="""A search engine optimized for comprehensive, accurate, and trusted results. Useful for when 
+        you need to answer questions related macro economics utterances (inflation, gdp, unemployment, interest rates).
+        It not only retrieves URLs and snippets, but offers advanced search depths, domain management, time range filters, 
+        and image search, this tool delivers real-time, accurate, and citation-backed results.Input should be a search query.""",
+        topic="general",
+    )
+    return search_tool
