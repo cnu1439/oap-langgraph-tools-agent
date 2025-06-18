@@ -7,7 +7,6 @@ from langgraph.prebuilt import create_react_agent
 from tools_agent.utils.tools import create_rag_tool
 from langchain.chat_models import init_chat_model
 from langchain_mcp_adapters.client import MultiServerMCPClient
-from tools_agent.utils.token import fetch_tokens
 from tools_agent.utils.tools import wrap_mcp_authenticate_tool, get_economics_search_tool
 
 UNEDITABLE_SYSTEM_PROMPT = "\nIf the tool throws an error requiring authentication, provide the user with a Markdown link to the authentication page and prompt them to authenticate."
@@ -29,12 +28,12 @@ class MCPConfig(BaseModel):
     url: Optional[str] = Field(
         default=None,
         optional=True,
-    )
+    )  # type: ignore
     """The URL of the MCP server"""
     tools: Optional[List[str]] = Field(
         default=None,
         optional=True,
-    )
+    )  # type: ignore
     """The tools to make available to the LLM"""
 
 
@@ -61,7 +60,7 @@ class GraphConfigPydantic(BaseModel):
                 ],
             }
         },
-    )
+    )  # type: ignore
     temperature: Optional[float] = Field(
         default=0.7,
         metadata={
@@ -74,7 +73,7 @@ class GraphConfigPydantic(BaseModel):
                 "description": "Controls randomness (0 = deterministic, 2 = creative)",
             }
         },
-    )
+    )  # type: ignore
     max_tokens: Optional[int] = Field(
         default=4000,
         metadata={
@@ -85,7 +84,7 @@ class GraphConfigPydantic(BaseModel):
                 "description": "The maximum number of tokens to generate",
             }
         },
-    )
+    )  # type: ignore
     system_prompt: Optional[str] = Field(
         default=DEFAULT_SYSTEM_PROMPT,
         metadata={
@@ -96,7 +95,7 @@ class GraphConfigPydantic(BaseModel):
                 "default": DEFAULT_SYSTEM_PROMPT,
             }
         },
-    )
+    )  # type: ignore
     mcp_config: Optional[MCPConfig] = Field(
         default=None,
         optional=True,
@@ -104,12 +103,13 @@ class GraphConfigPydantic(BaseModel):
             "x_oap_ui_config": {
                 "type": "mcp",
                 # Here is where you would set the default tools.
-                # "default": {
-                #     "tools": ["Math_Divide", "Math_Mod"]
-                # }
+                "default": {
+                    "url" : "https://ht-clear-tension-76-c67365b4a7dc5f3098eb8c5aa4445747.us.langgraph.app",
+                    "tools": ["stock_forecast_agent"]
+                }
             }
         },
-    )
+    )  # type: ignore
     rag: Optional[RagConfig] = Field(
         default=None,
         optional=True,
@@ -117,15 +117,15 @@ class GraphConfigPydantic(BaseModel):
             "x_oap_ui_config": {
                 "type": "rag",
                 # Here is where you would set the default collection. Use collection IDs
-                # "default": {
-                #     "collections": [
-                #         "fd4fac19-886c-4ac8-8a59-fff37d2b847f",
-                #         "659abb76-fdeb-428a-ac8f-03b111183e25",
-                #     ]
-                # },
+                "default": {
+                    "rag_url": "http://74.224.99.144:8080",
+                    "collections": [
+                        "7bf3d4c7-5c44-4e90-9b9d-7d85cca69162",
+                    ]
+                },
             }
         },
-    )
+    )  # type: ignore
 
 
 async def graph(config: RunnableConfig):
