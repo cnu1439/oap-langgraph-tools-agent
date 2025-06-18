@@ -5,16 +5,16 @@ description = "LangGraph tools agent with MCP and a RAG tool"
 authors = [{ name = "langchain-ai" }]
 requires-python = ">=3.11.0,<3.13"
 dependencies = [
-    "langgraph>=0.4.3",
-    "langchain-anthropic>=0.3.13",
-    "langchain-core>=0.3.59",
-    "langchain-openai>=0.3.16",
-    "pydantic>=2.11.3",
-    "langchain>=0.3.25",
-    "langchain-mcp-adapters>=0.1.0",
+    "langgraph==0.4.3",
+    "langchain-anthropic==0.3.13",
+    "langchain-core==0.3.59",
+    "langchain-openai==0.3.16",
+    "pydantic==2.11.3",
+    "langchain==0.3.25",
+    "langchain-mcp-adapters==0.1.0",
     "supabase>=2.15.1",
     "aiohttp>=3.8.0",
-    "langchain-tavily>=0.1.6",
+    "langchain-tavily==0.1.6",
 ]
 
 [tool.setuptools]
