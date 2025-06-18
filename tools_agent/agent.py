@@ -103,10 +103,10 @@ class GraphConfigPydantic(BaseModel):
             "x_oap_ui_config": {
                 "type": "mcp",
                 # Here is where you would set the default tools.
-                "default": {
-                    "url" : "https://ht-clear-tension-76-c67365b4a7dc5f3098eb8c5aa4445747.us.langgraph.app",
-                    "tools": ["stock_forecast_agent"]
-                }
+                # "default": {
+                #     "url" : "https://ht-clear-tension-76-c67365b4a7dc5f3098eb8c5aa4445747.us.langgraph.app",
+                #     "tools": ["stock_forecast_agent"]
+                # }
             }
         },
     )  # type: ignore
@@ -117,12 +117,12 @@ class GraphConfigPydantic(BaseModel):
             "x_oap_ui_config": {
                 "type": "rag",
                 # Here is where you would set the default collection. Use collection IDs
-                "default": {
-                    "rag_url": "http://74.224.99.144:8080",
-                    "collections": [
-                        "7bf3d4c7-5c44-4e90-9b9d-7d85cca69162",
-                    ]
-                },
+                # "default": {
+                #     "rag_url": "http://74.224.99.144:8080",
+                #     "collections": [
+                #         "7bf3d4c7-5c44-4e90-9b9d-7d85cca69162",
+                #     ]
+                # },
             }
         },
     )  # type: ignore
