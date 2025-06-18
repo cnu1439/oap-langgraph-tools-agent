@@ -139,8 +139,8 @@ async def graph(config: RunnableConfig):
             tools.append(rag_tool)
 
     logging.info("MCP config: %s", cfg.mcp_config)
-    logging.info("MCP tools: %s", cfg.mcp_config.tools)
-    logging.info("MCP URL: %s", cfg.mcp_config.url)
+    # logging.info("MCP tools: %s", cfg.mcp_config.tools)
+    # logging.info("MCP URL: %s", cfg.mcp_config.url)
 
     if cfg.mcp_config and cfg.mcp_config.url and cfg.mcp_config.tools:
         mcp_client = MultiServerMCPClient(
