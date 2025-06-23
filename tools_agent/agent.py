@@ -7,7 +7,8 @@ from langgraph.prebuilt import create_react_agent
 from tools_agent.utils.tools import create_rag_tool
 from langchain.chat_models import init_chat_model
 from langchain_mcp_adapters.client import MultiServerMCPClient
-from tools_agent.utils.tools import wrap_mcp_authenticate_tool, get_economics_search_tool
+from tools_agent.utils.tools import wrap_mcp_authenticate_tool, get_economics_search_tool, get_text_to_sql_tool
+
 
 UNEDITABLE_SYSTEM_PROMPT = "\nIf the tool throws an error requiring authentication, provide the user with a Markdown link to the authentication page and prompt them to authenticate."
 
@@ -165,6 +166,10 @@ async def graph(config: RunnableConfig):
         temperature=cfg.temperature,
         max_tokens=cfg.max_tokens,
     )
+
+    # Add text to SQL tools
+    sql_agent_tool = get_text_to_sql_tool(model)
+    tools.append(sql_agent_tool)
 
     # print all the tools
     logging.info(f"Tools: {tools}")

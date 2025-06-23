@@ -1,8 +1,15 @@
+import os
+import re
+import tempfile
+import aiohttp
+
 from typing import Annotated, Any, cast
 from langchain_core.tools import StructuredTool, ToolException, tool
-import aiohttp
-import re
 from langchain_tavily import TavilySearch
+from langchain_community.utilities import SQLDatabase
+from langchain_community.agent_toolkits import SQLDatabaseToolkit
+from langgraph.prebuilt import create_react_agent
+from langchain_core.messages import AIMessage
 
 
 def wrap_mcp_authenticate_tool(tool: StructuredTool) -> StructuredTool:
@@ -138,3 +145,94 @@ this tool delivers real-time, accurate, and citation-backed results.Input should
         return cast(dict[str, Any], await wrapped.ainvoke({"query": query}))
 
     return search
+
+
+def get_text_to_sql_tool(llm):
+    """Create a set of tools for text-to-SQL conversion.
+
+    Args:
+        database_url: The URL of the database to connect to
+        llm: The language model to use for SQL generation
+
+    Returns:
+        A list of structured tools for text-to-SQL conversion
+    """
+    from .db_init import DatabaseInitializer
+
+    tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
+    db_file_path = tfile.name
+    tfile.close()
+
+    db_initializer = DatabaseInitializer(db_path=db_file_path)
+
+    data_file_path = os.path.join(os.path.dirname(__file__), "data", "hr_database.csv")
+    db_initializer.create_database_from_csv(csv_file_path=data_file_path, table_name="employees")
+
+    database_url = f"sqlite:///{db_file_path}"
+    db = SQLDatabase.from_uri(database_url)
+    toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+    tools = toolkit.get_tools()
+
+    system_prompt = """
+You are an agent designed to interact with a SQL database.
+Given an input question, create a syntactically correct {dialect} query to run,
+then look at the results of the query and return the answer. Unless the user
+specifies a specific number of examples they wish to obtain, always limit your
+query to at most {top_k} results.
+
+You can order the results by a relevant column to return the most interesting
+examples in the database. Never query for all the columns from a specific table,
+only ask for the relevant columns given the question.
+
+You MUST double check your query before executing it. If you get an error while
+executing a query, rewrite the query and try again.
+
+DO NOT make any DML statements (INSERT, UPDATE, DELETE, DROP etc.) to the
+database.
+
+To start you should ALWAYS look at the tables in the database to see what you
+can query. Do NOT skip this step.
+
+Then you should query the schema of the most relevant tables.
+""".format(
+        dialect=db.dialect,
+        top_k=5,
+    )
+
+    agent = create_react_agent(
+        llm,
+        tools,
+        prompt=system_prompt,
+    )
+
+    name = "text_to_sql_toolkit"
+    description = "Tool for converting text queries into SQL queries. and return the results from the database. \
+    Useful for when you need to answer questions related to the HR database. \
+    tool has access to the HR database, which contains employee information such as Employee ID,Name,Department,Role,\
+    Start Date,Employee Status,FTE,Salary,Manager ID,Location,Performance Rating,Training Hours (YTD),Years of Service,\
+    Retention Risk,Succession Plan Ready,Job Level,Education Level,Remote Work Eligible,Previous Company Experience, \
+    Hiring Source,Recruitment Cost,Time to Hire (Days),Onboarding Status,Exit Date,Reason for Exit, \
+    New Hires in Dept (Qtr),Voluntary Turnover Rate (Dept),Avg. Salary Increase (%),Diversity Group, \
+    Skill Set 1,Skill Set 2,Skill Set 3,Project Allocation (%),Last Promotion Date \
+    It can answer questions like 'What is the average salary of employees in the Sales department? \
+    Input should be a natural language query about the HR database."
+
+    @tool(name_or_callable=name, description=description)
+    async def db_search(query: Annotated[str, "The search query to find relevant information"]):
+        """Search for information related to macro economics."""
+
+        results = await agent.ainvoke({"messages": [{"role": "user", "content": query}]})
+        messages = results.get("messages", [])
+        if not messages:
+            raise ToolException("No messages returned from the agent.")
+        last_message = messages[-1]
+        if not isinstance(last_message, AIMessage):
+            raise ToolException("Last message is not an AIMessage.")
+
+        response_content = last_message.content
+        if not response_content:
+            raise ToolException("No content in the last AIMessage.")
+
+        return response_content
+
+    return db_search
